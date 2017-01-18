@@ -94,7 +94,6 @@ module.exports.sendMessage = (event, context, callback) => {
           responseMsg.emit('sqsResponse');
         }
       });
-      
       responseMsg.on('sqsResponse', function(){
         var response = {
           statusCode: 400,
