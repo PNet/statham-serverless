@@ -71,22 +71,6 @@
                 "logs:PutLogEvents"
               ],
               "Resource": "arn:aws:logs:us-east-1:*:*"
-            },
-            {
-              "Effect": "Allow",
-              "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:PutLogEvents"
-              ],
-              "Resource": "arn:aws:logs:*:*:*"
-            },
-            {
-              "Effect": "Allow",
-              "Action": [
-                "sqs:SendMessage"
-              ],
-              "Resource": "arn:aws:sqs:us-west-2:451967854914:Statham-trunk"
             }
           ]
         },
@@ -104,7 +88,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/msgService/dev/1484762615842-2017-01-18T18:03:35.842Z/msgService.zip"
+          "S3Key": "serverless/msgService/dev/1484767097378-2017-01-18T19:18:17.378Z/msgService.zip"
         },
         "FunctionName": "msgService-dev-sendMessage",
         "Handler": "handler.sendMessage",
@@ -123,14 +107,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "SendMessageLambdaVersionqP6i0qSHsz3ChrUa87iIVwZbCYC22vwywdv0bhI2Q": {
+    "SendMessageLambdaVersionJyNOobWedRSO6qWxW9K6g8yMlK5gsvYvjauclxCthg": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "SendMessageLambdaFunction"
         },
-        "CodeSha256": "qP6i0q/SHsz+3ChrUa87iIVwZbCYC22vwywdv0bhI2Q="
+        "CodeSha256": "JyNOobWedRSO6/qWxW9K6g8yMlK5gsvYvjauclxCthg="
       }
     },
     "ReceiverMessageLambdaFunction": {
@@ -140,7 +124,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/msgService/dev/1484762615842-2017-01-18T18:03:35.842Z/msgService.zip"
+          "S3Key": "serverless/msgService/dev/1484767097378-2017-01-18T19:18:17.378Z/msgService.zip"
         },
         "FunctionName": "msgService-dev-receiverMessage",
         "Handler": "handler.receiver",
@@ -159,14 +143,50 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "ReceiverMessageLambdaVersionqP6i0qSHsz3ChrUa87iIVwZbCYC22vwywdv0bhI2Q": {
+    "ReceiverMessageLambdaVersionJyNOobWedRSO6qWxW9K6g8yMlK5gsvYvjauclxCthg": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "ReceiverMessageLambdaFunction"
         },
-        "CodeSha256": "qP6i0q/SHsz+3ChrUa87iIVwZbCYC22vwywdv0bhI2Q="
+        "CodeSha256": "JyNOobWedRSO6/qWxW9K6g8yMlK5gsvYvjauclxCthg="
+      }
+    },
+    "TestLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/msgService/dev/1484767097378-2017-01-18T19:18:17.378Z/msgService.zip"
+        },
+        "FunctionName": "msgService-dev-test",
+        "Handler": "handler.test",
+        "MemorySize": 1024,
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        },
+        "Runtime": "nodejs4.3",
+        "Timeout": 6
+      },
+      "DependsOn": [
+        "IamPolicyLambdaExecution",
+        "IamRoleLambdaExecution"
+      ]
+    },
+    "TestLambdaVersionJyNOobWedRSO6qWxW9K6g8yMlK5gsvYvjauclxCthg": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "TestLambdaFunction"
+        },
+        "CodeSha256": "JyNOobWedRSO6/qWxW9K6g8yMlK5gsvYvjauclxCthg="
       }
     },
     "ApiGatewayRestApi": {
@@ -200,6 +220,21 @@
           ]
         },
         "PathPart": "receiver",
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        }
+      }
+    },
+    "ApiGatewayResourceTest": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "ApiGatewayRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "test",
         "RestApiId": {
           "Ref": "ApiGatewayRestApi"
         }
@@ -281,7 +316,45 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayDeployment1484762615849": {
+    "ApiGatewayMethodTestGet": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "HttpMethod": "GET",
+        "RequestParameters": {},
+        "ResourceId": {
+          "Ref": "ApiGatewayResourceTest"
+        },
+        "RestApiId": {
+          "Ref": "ApiGatewayRestApi"
+        },
+        "AuthorizationType": "NONE",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:aws:apigateway:",
+                {
+                  "Ref": "AWS::Region"
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "TestLambdaFunction",
+                    "Arn"
+                  ]
+                },
+                "/invocations"
+              ]
+            ]
+          }
+        },
+        "MethodResponses": []
+      }
+    },
+    "ApiGatewayDeployment1484767097387": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -291,7 +364,8 @@
       },
       "DependsOn": [
         "ApiGatewayMethodSendPost",
-        "ApiGatewayMethodReceiverPost"
+        "ApiGatewayMethodReceiverPost",
+        "ApiGatewayMethodTestGet"
       ]
     },
     "SendMessageLambdaPermissionApiGateway": {
@@ -359,6 +433,39 @@
           ]
         }
       }
+    },
+    "TestLambdaPermissionApiGateway": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "TestLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "ApiGatewayRestApi"
+              },
+              "/*/*"
+            ]
+          ]
+        }
+      }
     }
   },
   "Outputs": {
@@ -379,7 +486,7 @@
     "SendMessageLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "SendMessageLambdaVersionqP6i0qSHsz3ChrUa87iIVwZbCYC22vwywdv0bhI2Q"
+        "Ref": "SendMessageLambdaVersionJyNOobWedRSO6qWxW9K6g8yMlK5gsvYvjauclxCthg"
       }
     },
     "ReceiverMessageLambdaFunctionArn": {
@@ -394,7 +501,22 @@
     "ReceiverMessageLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ReceiverMessageLambdaVersionqP6i0qSHsz3ChrUa87iIVwZbCYC22vwywdv0bhI2Q"
+        "Ref": "ReceiverMessageLambdaVersionJyNOobWedRSO6qWxW9K6g8yMlK5gsvYvjauclxCthg"
+      }
+    },
+    "TestLambdaFunctionArn": {
+      "Description": "Lambda function info",
+      "Value": {
+        "Fn::GetAtt": [
+          "TestLambdaFunction",
+          "Arn"
+        ]
+      }
+    },
+    "TestLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "TestLambdaVersionJyNOobWedRSO6qWxW9K6g8yMlK5gsvYvjauclxCthg"
       }
     },
     "ServiceEndpoint": {

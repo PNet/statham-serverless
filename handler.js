@@ -71,30 +71,12 @@ module.exports.sendMessage = (event, context, callback) => {
       callback(null, response);
     });
     responseMsg.on('error', function () {
+        
+      AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
+    
       var sqs = new AWS.SQS("us-west-2");
       
       responseMsg.sqs = "";
-      
-      var params = {
-        AWSAccountIds: [
-           "451967854914"
-        ], 
-        Actions: [
-           "SendMessage"
-        ], 
-        Label: "SendMessagesFromMyQueue", 
-        QueueUrl: 'https://sqs.us-west-2.amazonaws.com/451967854914/Statham-trunk'
-      };
-      sqs.addPermission(params, function(err, data) {
-        if (err){
-          console.log(err, err.stack);
-          responseMsg.sqs = responseMsg.sqs + 'PERMISION ERROR: ' + err + ' ';
-        }
-        else{
-          console.log(data);
-          responseMsg.sqs = responseMsg.sqs + 'DATA: ' + data + ' ';
-        }
-      });
       
       var sqsParams = {
         MessageBody: JSON.stringify(messageJSON),
@@ -121,11 +103,8 @@ module.exports.sendMessage = (event, context, callback) => {
               "SQSResponse" : responseMsg.sqs
           })
         };
-        
         callback(null, response);
       });
-      
-      
     });
   }
   else{
@@ -135,10 +114,8 @@ module.exports.sendMessage = (event, context, callback) => {
         "body" : "Mensaje no enviado: supera numero maximo de try (5)"
       })
     };
-    
     callback(null, response);
   }
-  
 };
 
 module.exports.receiver = (event, context, callback) => {
@@ -147,6 +124,30 @@ module.exports.receiver = (event, context, callback) => {
     body: JSON.stringify({
       message: "nice",
       input: event
+    })
+  };
+  callback(null, response);
+};
+
+module.exports.test = (event, context, callback) => {
+  AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
+    
+  var sqs = new AWS.SQS("us-west-2");
+  
+  responseMsg.sqs = "";
+  
+  var sqsParams = {
+    MessageBody: JSON.stringify(
+      {"hola" : "asdf"}
+      ),
+    QueueUrl: 'https://sqs.us-west-2.amazonaws.com/451967854914/Statham-trunk'
+  };
+  sqs.sendMessage(sqsParams, function(err, data) {});
+
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: "Nice"
     })
   };
   callback(null, response);

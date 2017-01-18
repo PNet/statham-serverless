@@ -24,17 +24,17 @@ provider:
 # you can overwrite defaults here
 #  stage: dev
 #  region: us-east-1
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "logs:CreateLogGroup"
-        - "logs:CreateLogStream"
-        - "logs:PutLogEvents"
-      Resource: "arn:aws:logs:*:*:*"
-    - Effect: "Allow"
-      Action:
-        - "sqs:SendMessage"
-      Resource: "arn:aws:sqs:us-west-2:451967854914:Statham-trunk"
+  # iamRoleStatements:
+  #   - Effect: "Allow"
+  #     Action:
+  #       - "logs:CreateLogGroup"
+  #       - "logs:CreateLogStream"
+  #       - "logs:PutLogEvents"
+  #     Resource: "arn:aws:logs:*:*:*"
+  #   - Effect: "Allow"
+  #     Action:
+  #       - "sqs:SendMessage"
+  #     Resource: "arn:aws:sqs:us-west-2:451967854914:Statham-trunk"
 # you can add statements to the Lambda function's IAM Role here
 #  iamRoleStatements:
 #    - Effect: "Allow"
@@ -76,6 +76,12 @@ functions:
       - http:
           path: receiver
           method: post
+  test:
+    handler: handler.test
+    events:
+      - http:
+          path: test
+          method: get
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
