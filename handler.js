@@ -10,20 +10,18 @@ module.exports.sendMessage = (event, context, callback) => {
   var messageJSON = JSON.parse(event.body);
 
   if(!messageJSON.tries)
-    messageJSON.tries = 1;
+    messageJSON.tries = 0;
 
   messageJSON.tries += 1;
 
   if(messageJSON.tries > 5){
-      //eliminar mensaje y notificar
      var response = {
       statusCode: 400,
       body: JSON.stringify({
-        "body" : "Mensaje no enviado: supera numero maximo de try (5)"
+        "body" : "Mensaje no enviado: supera numero maximo de intentos (5)"
       })
     };
     callback(null, response);
-    return false;
   }
 
   var postData = JSON.stringify(messageJSON.body);
@@ -42,10 +40,11 @@ module.exports.sendMessage = (event, context, callback) => {
   };
 
   var req = https.request(options, (res) => {
+    responseMsg.data = "";
     res.setEncoding('utf8');
     res.on('data', (chunk) => {
       console.log(`DATA CHUNK: ${chunk}`);
-      responseMsg.data += JSON.parse(chunk);
+      responseMsg.data += chunk;
     });
     res.on('end', () => {
       console.log(`DATA: ${responseMsg.data}`);
