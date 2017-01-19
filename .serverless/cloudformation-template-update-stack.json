@@ -88,7 +88,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/msgService/dev/1484846989334-2017-01-19T17:29:49.334Z/msgService.zip"
+          "S3Key": "serverless/msgService/dev/1484852040324-2017-01-19T18:54:00.324Z/msgService.zip"
         },
         "FunctionName": "msgService-dev-sendMessage",
         "Handler": "handler.sendMessage",
@@ -107,14 +107,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "SendMessageLambdaVersion1yCJRhnxGtPlaDa5osdkQBbOKQp31Bp3eKlPl1JRnU": {
+    "SendMessageLambdaVersionrtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "SendMessageLambdaFunction"
         },
-        "CodeSha256": "1yCJRhnxGtPlaDa+5osdkQBbOKQp31Bp3eKlPl1JRnU="
+        "CodeSha256": "rtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo="
       }
     },
     "ReceiverMessageLambdaFunction": {
@@ -124,7 +124,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/msgService/dev/1484846989334-2017-01-19T17:29:49.334Z/msgService.zip"
+          "S3Key": "serverless/msgService/dev/1484852040324-2017-01-19T18:54:00.324Z/msgService.zip"
         },
         "FunctionName": "msgService-dev-receiverMessage",
         "Handler": "handler.receiver",
@@ -143,14 +143,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "ReceiverMessageLambdaVersion1yCJRhnxGtPlaDa5osdkQBbOKQp31Bp3eKlPl1JRnU": {
+    "ReceiverMessageLambdaVersionrtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "ReceiverMessageLambdaFunction"
         },
-        "CodeSha256": "1yCJRhnxGtPlaDa+5osdkQBbOKQp31Bp3eKlPl1JRnU="
+        "CodeSha256": "rtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo="
       }
     },
     "TestLambdaFunction": {
@@ -160,7 +160,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/msgService/dev/1484846989334-2017-01-19T17:29:49.334Z/msgService.zip"
+          "S3Key": "serverless/msgService/dev/1484852040324-2017-01-19T18:54:00.324Z/msgService.zip"
         },
         "FunctionName": "msgService-dev-test",
         "Handler": "handler.test",
@@ -179,14 +179,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "TestLambdaVersion1yCJRhnxGtPlaDa5osdkQBbOKQp31Bp3eKlPl1JRnU": {
+    "TestLambdaVersionrtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "TestLambdaFunction"
         },
-        "CodeSha256": "1yCJRhnxGtPlaDa+5osdkQBbOKQp31Bp3eKlPl1JRnU="
+        "CodeSha256": "rtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo="
       }
     },
     "ApiGatewayRestApi": {
@@ -354,7 +354,7 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayDeployment1484846989344": {
+    "ApiGatewayDeployment1484852040334": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -486,7 +486,7 @@
     "SendMessageLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "SendMessageLambdaVersion1yCJRhnxGtPlaDa5osdkQBbOKQp31Bp3eKlPl1JRnU"
+        "Ref": "SendMessageLambdaVersionrtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo"
       }
     },
     "ReceiverMessageLambdaFunctionArn": {
@@ -501,7 +501,7 @@
     "ReceiverMessageLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ReceiverMessageLambdaVersion1yCJRhnxGtPlaDa5osdkQBbOKQp31Bp3eKlPl1JRnU"
+        "Ref": "ReceiverMessageLambdaVersionrtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo"
       }
     },
     "TestLambdaFunctionArn": {
@@ -516,7 +516,7 @@
     "TestLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "TestLambdaVersion1yCJRhnxGtPlaDa5osdkQBbOKQp31Bp3eKlPl1JRnU"
+        "Ref": "TestLambdaVersionrtktZKaF3oHlZUWxDc3ntuiF3QWEId1TYSNrrKopnwo"
       }
     },
     "ServiceEndpoint": {

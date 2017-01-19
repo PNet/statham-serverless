@@ -18,7 +18,7 @@ module.exports.sendMessage = (event, context, callback) => {
      var response = {
       statusCode: 400,
       body: JSON.stringify({
-        "body" : "Mensaje no enviado: supera numero maximo de intentos (5)"
+        "ERROR" : "Mensaje no enviado: supera numero maximo de intentos (5)"
       })
     };
     callback(null, response);
