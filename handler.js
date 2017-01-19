@@ -2,6 +2,7 @@
 var https = require('https');
 var url = require('url');
 var AWS = require('aws-sdk');
+var sleep = require('sleep');
 var EventEmitter = require("events").EventEmitter;
 var responseMsg = new EventEmitter();
 
@@ -22,6 +23,10 @@ module.exports.sendMessage = (event, context, callback) => {
       })
     };
     callback(null, response);
+  }
+  else if(messageJSON.tries > 1){
+    sleep(1000);
+    messageJSON.sleep = 1;
   }
 
   var postData = JSON.stringify(messageJSON.body);
