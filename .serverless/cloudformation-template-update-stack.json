@@ -88,7 +88,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/msgService/dev/1484855860774-2017-01-19T19:57:40.774Z/msgService.zip"
+          "S3Key": "serverless/msgService/dev/1484861656739-2017-01-19T21:34:16.739Z/msgService.zip"
         },
         "FunctionName": "msgService-dev-sendMessage",
         "Handler": "handler.sendMessage",
@@ -107,14 +107,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "SendMessageLambdaVersionsQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANjq0": {
+    "SendMessageLambdaVersionlWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "SendMessageLambdaFunction"
         },
-        "CodeSha256": "sQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANj+q0="
+        "CodeSha256": "lWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc="
       }
     },
     "ReceiverMessageLambdaFunction": {
@@ -124,7 +124,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/msgService/dev/1484855860774-2017-01-19T19:57:40.774Z/msgService.zip"
+          "S3Key": "serverless/msgService/dev/1484861656739-2017-01-19T21:34:16.739Z/msgService.zip"
         },
         "FunctionName": "msgService-dev-receiverMessage",
         "Handler": "handler.receiver",
@@ -143,14 +143,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "ReceiverMessageLambdaVersionsQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANjq0": {
+    "ReceiverMessageLambdaVersionlWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "ReceiverMessageLambdaFunction"
         },
-        "CodeSha256": "sQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANj+q0="
+        "CodeSha256": "lWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc="
       }
     },
     "TestLambdaFunction": {
@@ -160,7 +160,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/msgService/dev/1484855860774-2017-01-19T19:57:40.774Z/msgService.zip"
+          "S3Key": "serverless/msgService/dev/1484861656739-2017-01-19T21:34:16.739Z/msgService.zip"
         },
         "FunctionName": "msgService-dev-test",
         "Handler": "handler.test",
@@ -179,14 +179,14 @@
         "IamRoleLambdaExecution"
       ]
     },
-    "TestLambdaVersionsQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANjq0": {
+    "TestLambdaVersionlWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "TestLambdaFunction"
         },
-        "CodeSha256": "sQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANj+q0="
+        "CodeSha256": "lWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc="
       }
     },
     "ApiGatewayRestApi": {
@@ -354,7 +354,7 @@
         "MethodResponses": []
       }
     },
-    "ApiGatewayDeployment1484855860783": {
+    "ApiGatewayDeployment1484861656749": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "RestApiId": {
@@ -466,6 +466,54 @@
           ]
         }
       }
+    },
+    "SNSTopicStathamnotification": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "TopicName": "Statham-notification",
+        "DisplayName": "StathamSNS",
+        "Subscription": [
+          {
+            "Endpoint": {
+              "Fn::GetAtt": [
+                "SendMessageLambdaFunction",
+                "Arn"
+              ]
+            },
+            "Protocol": "lambda"
+          }
+        ]
+      }
+    },
+    "SendMessageLambdaPermissionStathamnotificationSNS": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "SendMessageLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:aws:sns:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              "Statham-notification"
+            ]
+          ]
+        }
+      }
     }
   },
   "Outputs": {
@@ -486,7 +534,7 @@
     "SendMessageLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "SendMessageLambdaVersionsQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANjq0"
+        "Ref": "SendMessageLambdaVersionlWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc"
       }
     },
     "ReceiverMessageLambdaFunctionArn": {
@@ -501,7 +549,7 @@
     "ReceiverMessageLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "ReceiverMessageLambdaVersionsQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANjq0"
+        "Ref": "ReceiverMessageLambdaVersionlWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc"
       }
     },
     "TestLambdaFunctionArn": {
@@ -516,7 +564,7 @@
     "TestLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "TestLambdaVersionsQSSWyFPAuxV8efbRngX1eLrZlykz68E97tP4ANjq0"
+        "Ref": "TestLambdaVersionlWMOYPBhmRpIlspLhFHrOc3QTEpA1R6hwFVvil0OmWc"
       }
     },
     "ServiceEndpoint": {
