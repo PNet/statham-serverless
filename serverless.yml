@@ -3,6 +3,7 @@ service: msgService
 provider:
   name: aws
   runtime: nodejs4.3
+  region: us-west-2
 
 functions:
   sendMessage:
@@ -11,10 +12,6 @@ functions:
       - http:
           path: send
           method: post
-      - sns:
-          topicName: Statham-notification
-          displayName: StathamSNS
-          arn: arn:aws:sns:us-west-2:451967854914:Statham-notification
   receiverMessage:
     handler: handler.receiver
     events:

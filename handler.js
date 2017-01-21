@@ -11,7 +11,7 @@ module.exports.sendMessage = (event, context, callback) => {
   var messageJSON = JSON.parse(event.body);
 
   if(messageJSON.TopicArn && messageJSON.TopicArn == "arn:aws:sns:us-west-2:451967854914:Statham-notification"){
-    var messageJSON = JSON.parse(messageJSON.Message);
+    messageJSON = JSON.parse(messageJSON.Message);
   }
 
   if(!messageJSON.tries)
@@ -72,8 +72,6 @@ module.exports.sendMessage = (event, context, callback) => {
     var error = `ERROR: ${e.message}`;
 
     AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
-
-    AWS.config.region = 'us-west-2';
 
     var sns = new AWS.SNS();
     var snsParams = {
