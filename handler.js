@@ -72,50 +72,32 @@ module.exports.sendMessage = (event, context, callback) => {
     var error = `ERROR: ${e.message}`;
 
     AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
-    var sqs = new AWS.SQS("us-west-2");
 
-    var sqsParams = {
-      MessageBody: JSON.stringify(messageJSON),
-      QueueUrl: 'https://1sqs.us-west-2.amazonaws.com/451967854914/Statham-trunk'
+    AWS.config.region = 'us-west-2';
+
+    var sns = new AWS.SNS();
+    var snsParams = {
+      Message: JSON.stringify(messageJSON),
+      Subject: "Message not delivered From Lambda",
+      TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-notification'
+      //PhoneNumber: "+56965451609"
     };
-    sqs.sendMessage(sqsParams, function(errSQS, dataSQS) {
-      var responseSQS = "";
-      if (errSQS) {
-        responseSQS = responseSQS + 'STORESQSERROR: ' + errSQS + ' ';
+    sns.publish(snsParams, function(errSNS, dataSNS){
+      var responseSNS = "";
+      if(errSNS){
+        responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
       }
       else{
-        responseSQS = responseSQS + 'DATA: ' + dataSQS + ' ';
+        responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
       }
-
-      AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
-
-      AWS.config.region = 'us-west-2';
-
-      var sns = new AWS.SNS();
-      var snsParams = {
-        Message: JSON.stringify(messageJSON),
-        Subject: "Message not delivered From Lambda",
-        TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-notification'
-        //PhoneNumber: "+56965451609"
+      var response = {
+        statusCode: 400,
+        body: JSON.stringify({
+            "Error" : error,
+            "SNSResponse" : responseSNS
+        })
       };
-      sns.publish(snsParams, function(errSNS, dataSNS){
-        var responseSNS = "";
-        if(errSNS){
-          responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
-        }
-        else{
-          responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
-        }
-        var response = {
-          statusCode: 400,
-          body: JSON.stringify({
-              "Error" : error,
-              "SQSResponse" : responseSQS,
-              "SNSResponse" : responseSNS
-          })
-        };
-        callback(null, response);
-      });
+      callback(null, response);
     });
   });
 
