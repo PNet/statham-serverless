@@ -7,11 +7,13 @@ var EventEmitter = require("events").EventEmitter;
 var responseMsg = new EventEmitter();
 
 module.exports.sendMessage = (event, context, callback) => {
+  var messageJSON;
 
-  var messageJSON = JSON.parse(event.body);
-
-  if(messageJSON.TopicArn && messageJSON.TopicArn == "arn:aws:sns:us-west-2:451967854914:Statham-notification"){
-    messageJSON = JSON.parse(messageJSON.Message);
+  if(event.Records){
+      messageJSON = JSON.parse(event.Records[0].Sns.Message);
+  }
+  else{
+      messageJSON = JSON.parse(event.body);
   }
 
   if(!messageJSON.tries)
@@ -20,7 +22,7 @@ module.exports.sendMessage = (event, context, callback) => {
   messageJSON.tries += 1;
 
   if(messageJSON.tries > 5){
-     var response = {
+    var response = {
       statusCode: 400,
       body: JSON.stringify({
         "ERROR" : "Mensaje no enviado: supera numero maximo de intentos (5)"
@@ -28,79 +30,79 @@ module.exports.sendMessage = (event, context, callback) => {
     };
     callback(null, response);
   }
-  else if(messageJSON.tries > 1){
-    sleep(1000); //sleep for 1 second, change it for 40 minutes
-  }
+  else{
+    if(messageJSON.tries > 1) sleep(10000); //fixed to 10 seconds but can be replaced (replace timeout of the function too)
 
-  var postData = JSON.stringify(messageJSON.body);
+    var postData = JSON.stringify(messageJSON.body);
 
-  var urlDest = url.parse(messageJSON.url);
+    var urlDest = url.parse(messageJSON.url);
 
-  var options = {
-    hostname: urlDest.host,
-    port: urlDest.port,
-    path: urlDest.pathname,
-    method: messageJSON.method,
-    headers: {
-      'Content-Type' : 'application/json',
-      'Content-Length': postData.length
-    }
-  };
-
-  var req = https.request(options, (res) => {
-    var data = "";
-    res.setEncoding('utf8');
-    res.on('data', (chunk) => {
-      console.log(`DATA CHUNK: ${chunk}`);
-      data += chunk;
-    });
-    res.on('end', () => {
-      var dataJSON = JSON.parse(data);
-
-      var response = {
-        statusCode: 200,
-        body: JSON.stringify({
-          "Success" : dataJSON
-          })
-      };
-
-      callback(null, response);
-    });
-  });
-
-  req.on('error', (e) => {
-    var error = `ERROR: ${e.message}`;
-
-    AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
-
-    var sns = new AWS.SNS();
-    var snsParams = {
-      Message: JSON.stringify(messageJSON),
-      Subject: "Message not delivered From Lambda",
-      TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-notification'
-      //PhoneNumber: "+56965451609"
+    var options = {
+      hostname: urlDest.host,
+      port: urlDest.port,
+      path: urlDest.pathname,
+      method: messageJSON.method,
+      headers: {
+        'Content-Type' : 'application/json',
+        'Content-Length': postData.length
+      }
     };
-    sns.publish(snsParams, function(errSNS, dataSNS){
-      var responseSNS = "";
-      if(errSNS){
-        responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
-      }
-      else{
-        responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
-      }
-      var response = {
-        statusCode: 400,
-        body: JSON.stringify({
-            "Error" : error,
-            "SNSResponse" : responseSNS
-        })
-      };
-      callback(null, response);
-    });
-  });
 
-  req.write(postData);
-  req.end();
+    var req = https.request(options, (res) => {
+      var data = "";
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => {
+        console.log(`DATA CHUNK: ${chunk}`);
+        data += chunk;
+      });
+      res.on('end', () => {
+        var dataJSON = JSON.parse(data);
+
+        var response = {
+          statusCode: 200,
+          body: JSON.stringify({
+            "Success" : dataJSON
+            })
+        };
+
+        callback(null, response);
+      });
+    });
+
+    req.on('error', (e) => {
+      var error = `ERROR: ${e.message}`;
+
+      AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
+
+      var sns = new AWS.SNS();
+      var snsParams = {
+        Message: JSON.stringify(messageJSON),
+        Subject: "Message not delivered From Lambda",
+        TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-notification'
+        //PhoneNumber: "+56965451609"
+      };
+      sns.publish(snsParams, function(errSNS, dataSNS){
+        var responseSNS = "";
+        if(errSNS){
+          responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
+        }
+        else{
+          responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
+        }
+        var response = {
+          statusCode: 400,
+          body: JSON.stringify({
+              "Error" : error,
+              "SNSResponse" : responseSNS
+          })
+        };
+        callback(null, response);
+      });
+    });
+
+    req.write(postData);
+    req.end();
+  }
 };
 
 module.exports.receiver = (event, context, callback) => {
