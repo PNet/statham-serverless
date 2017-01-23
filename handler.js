@@ -14,7 +14,7 @@ module.exports.sendMessage = (event, context, callback) => {
   }
   else{
       messageJSON = JSON.parse(event.body);
-      messageJSON.source = event.header.Origin;
+      messageJSON.source = event.headers.Origin;
   }
 
   if(!messageJSON.tries)
@@ -33,6 +33,9 @@ module.exports.sendMessage = (event, context, callback) => {
                    URL destination: ${messageJSON.url}\n
                    Source: ${messageJSON.source}\n
                    Destination path: ${messageJSON.dest}\n
+
+                   Body: ${JSON.stringify(messageJSON.body)}\n
+
                    ${messageJSON.error}\n
                    `;
 
