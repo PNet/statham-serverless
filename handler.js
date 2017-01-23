@@ -37,7 +37,7 @@ module.exports.sendMessage = (event, context, callback) => {
 
     var snsParams = {
       Message: message,
-      Subject: "The message reached the maximum number of sending attempts",
+      Subject: "A message reached the maximum number of sending attempts",
       TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
     };
     sns.publish(snsParams, function(errSNS, dataSNS){
