@@ -100,6 +100,8 @@ module.exports.sendMessage = (event, context, callback) => {
     req.on('error', (e) => {
       var error = `ERROR: ${e.message}`;
 
+      messageJSON.error = error;
+
       AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
 
       var sns = new AWS.SNS();
