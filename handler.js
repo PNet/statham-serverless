@@ -6,21 +6,20 @@ var sleep = require('sleep');
 var EventEmitter = require("events").EventEmitter;
 var responseMsg = new EventEmitter();
 var sns = new AWS.SNS();
-var messageJSON; 
 var Key_Id          = 'AKIAJJXJTSB3RUPHDTIQ'
 var secretAccessKey = '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'
 AWS.config.update({accessKeyId: Key_Id, secretAccessKey: secretAccessKey});
 
 var fetch_request_message = function(event){
-  var message;
+  var messageJSON;
   if(event.Records){
-      message = JSON.parse(event.Records[0].Sns.Message);
+      messageJSON = JSON.parse(event.Records[0].Sns.Message);
   }
   else{
-      message = JSON.parse(event.body);
-      message.source = event.headers.Origin;
+      messageJSON = JSON.parse(event.body);
+      messageJSON.source = event.headers.Origin;
   }
-  return message;
+  return messageJSON;
 }
 
 var validate_tries_message = function(messageJSON){
@@ -75,14 +74,10 @@ var error_message_to_email = function(messageJSON){
 }
 
 var send_message = function(messageJSON){
-  if(messageJSON.tries > 1) sleep(10000); //fixed to 10 seconds 
-
+  if(messageJSON.tries > 1) sleep(10000);
   var postData = JSON.stringify(messageJSON.body);
-
   var urlDest = url.parse(messageJSON.url);
-
   messageJSON.dest = urlDest.pathname;
-
   var options = {
     hostname: urlDest.host,
     port: urlDest.port,
