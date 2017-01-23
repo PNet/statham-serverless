@@ -24,14 +24,14 @@ var fetch_request_message = function(event){
 }
 
 var validate_tries_message = function(messageJSON){
-    if(!messageJSON.tries)
+  if(!messageJSON.tries)
     messageJSON.tries = 0;
   messageJSON.tries += 1;
   
   if(messageJSON.tries > 5){
     error_message_to_email(messageJSON);
   else{
-    sed_message(messageJSON);
+    send_message(messageJSON);
     }
 }
 
@@ -75,7 +75,7 @@ var error_message_to_email = function(messageJSON){
 }
 
 var send_message = function(messageJSON){
-  if(messageJSON.tries > 1) sleep(10000); //fixed to 10 seconds but can be replaced (replace timeout of the function too)
+  if(messageJSON.tries > 1) sleep(10000); //fixed to 10 seconds 
 
     var postData = JSON.stringify(messageJSON.body);
 
@@ -102,14 +102,12 @@ var send_message = function(messageJSON){
       });
       res.on('end', () => {
         var dataJSON = JSON.parse(data);
-
         var response = {
           statusCode: 200,
           body: JSON.stringify({
             "Success" : dataJSON
             })
         };
-
         callback(null, response);
       });
     });
@@ -123,7 +121,6 @@ var send_message = function(messageJSON){
         Message: JSON.stringify(messageJSON),
         Subject: "Message not delivered From Lambda",
         TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-notification'
-        //PhoneNumber: "+56965451609"
       };
       sns.publish(snsParams, function(errSNS, dataSNS){
         var responseSNS = "";
@@ -143,16 +140,13 @@ var send_message = function(messageJSON){
         callback(null, response);
       });
     });
-
     req.write(postData);
     req.end();
 }
 
-
-
 module.exports.sendMessage = (event, context, callback) => {
   var messageJSON = format_message_sns(event);
-  var tries       = validate_tries_message(messageJSON);
+  validate_tries_message(messageJSON);
 };
 
 module.exports.receiver = (event, context, callback) => {
