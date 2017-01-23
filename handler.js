@@ -9,12 +9,9 @@ var sns = new AWS.SNS();
 var messageJSON; 
 var Key_Id          = 'AKIAJJXJTSB3RUPHDTIQ'
 var secretAccessKey = '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'
+AWS.config.update({accessKeyId: Key_Id, secretAccessKey: secretAccessKey});
 
-function AWS(){
-  AWS.config.update({accessKeyId: Key_Id, secretAccessKey: secretAccessKey});
-}
-
-function format_message_sns(event){
+var fetch_request_message = function(event){
   var message;
   if(event.Records){
       message = JSON.parse(event.Records[0].Sns.Message);
@@ -26,17 +23,20 @@ function format_message_sns(event){
   return message;
 }
 
-module.exports.sendMessage = (event, context, callback) => {
-  var messageJSON = format_message_sns(event);
-  
-  if(!messageJSON.tries)
+var validate_tries_message = function(messageJSON){
+    if(!messageJSON.tries)
     messageJSON.tries = 0;
-
   messageJSON.tries += 1;
-
+  
   if(messageJSON.tries > 5){
+    error_message_to_email(messageJSON);
+  else{
+    sed_message(messageJSON);
+    }
+}
 
-    var message = `Attempted to send the message five times but the destination couldn't be reached.\n
+var error_message_to_email = function(messageJSON){
+   var message = `Attempted to send the message five times but the destination couldn't be reached.\n
     Details:\n
                    Method: ${messageJSON.method}\n
                    URL destination: ${messageJSON.url}\n
@@ -72,8 +72,10 @@ module.exports.sendMessage = (event, context, callback) => {
     });
 
   }
-  else{
-    if(messageJSON.tries > 1) sleep(10000); //fixed to 10 seconds but can be replaced (replace timeout of the function too)
+}
+
+var send_message = function(messageJSON){
+  if(messageJSON.tries > 1) sleep(10000); //fixed to 10 seconds but can be replaced (replace timeout of the function too)
 
     var postData = JSON.stringify(messageJSON.body);
 
@@ -144,7 +146,13 @@ module.exports.sendMessage = (event, context, callback) => {
 
     req.write(postData);
     req.end();
-  }
+}
+
+
+
+module.exports.sendMessage = (event, context, callback) => {
+  var messageJSON = format_message_sns(event);
+  var tries       = validate_tries_message(messageJSON);
 };
 
 module.exports.receiver = (event, context, callback) => {
