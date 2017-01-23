@@ -22,13 +22,42 @@ module.exports.sendMessage = (event, context, callback) => {
   messageJSON.tries += 1;
 
   if(messageJSON.tries > 5){
-    var response = {
-      statusCode: 400,
-      body: JSON.stringify({
-        "ERROR" : "Mensaje no enviado: supera numero maximo de intentos (5)"
-      })
+    AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
+
+    var sns = new AWS.SNS();
+
+    var message = `Attempted to send the message five times but the destination couldn't be reached.\n
+    Details:\n
+                   Method: ${messageJSON.method}\n
+                   URL destination: ${messageJSON.url}\n
+                   Source: ${messageJSON.source}\n
+                   Destination path: ${messageJSON.dest}\n
+                   ${messageJSON.error}\n
+                   `;
+
+    var snsParams = {
+      Message: message,
+      Subject: "The message reached the maximum number of sending attempts",
+      TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
     };
-    callback(null, response);
+    sns.publish(snsParams, function(errSNS, dataSNS){
+      var responseSNS = "";
+      if(errSNS){
+        responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
+      }
+      else{
+        responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
+      }
+
+      var response = {
+        statusCode: 400,
+        body: JSON.stringify({
+            "SNSResponse" : responseSNS
+        })
+      };
+      callback(null, response);
+    });
+
   }
   else{
     if(messageJSON.tries > 1) sleep(10000); //fixed to 10 seconds but can be replaced (replace timeout of the function too)
@@ -52,7 +81,6 @@ module.exports.sendMessage = (event, context, callback) => {
       var data = "";
       res.setEncoding('utf8');
       res.on('data', (chunk) => {
-        console.log(`DATA CHUNK: ${chunk}`);
         data += chunk;
       });
       res.on('end', () => {
