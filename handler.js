@@ -141,37 +141,3 @@ module.exports.sendMessage = (event, context, callback) => {
   var response    = validate_tries_message(messageJSON);
   callback(null, response);
 };
-
-module.exports.receiver = (event, context, callback) => {
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: "nice",
-      input: event
-    })
-  };
-  callback(null, response);
-};
-
-module.exports.test = (event, context, callback) => {
-
-  var sqs = new AWS.SQS("us-west-2");
-
-  responseMsg.sqs = "";
-
-  var sqsParams = {
-    MessageBody: JSON.stringify(
-      {"hola" : "asdf"}
-      ),
-    QueueUrl: 'https://sqs.us-west-2.amazonaws.com/451967854914/Statham-trunk'
-  };
-  sqs.sendMessage(sqsParams, function(err, data) {});
-
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      message: "Nice"
-    })
-  };
-  callback(null, response);
-};
