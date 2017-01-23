@@ -27,11 +27,10 @@ var validate_tries_message = function(messageJSON){
     messageJSON.tries = 0;
   messageJSON.tries += 1;
   
-  if(messageJSON.tries > 5){
-    error_message_to_email(messageJSON);
-  else{
-    send_message(messageJSON);
-    }
+  if(messageJSON.tries > 5)
+    return error_message_to_email(messageJSON);
+  else
+    return send_message(messageJSON);
 }
 
 var error_message_to_email = function(messageJSON){
@@ -67,10 +66,8 @@ var error_message_to_email = function(messageJSON){
             "SNSResponse" : responseSNS
         })
       };
-      callback(null, response);
+      return response;
     });
-
-  }
 }
 
 var send_message = function(messageJSON){
@@ -103,7 +100,7 @@ var send_message = function(messageJSON){
           "Success" : dataJSON
           })
       };
-      callback(null, response);
+      return response;
     });
   });
 
@@ -132,7 +129,7 @@ var send_message = function(messageJSON){
             "SNSResponse" : responseSNS
         })
       };
-      callback(null, response);
+      return response;
     });
   });
   req.write(postData);
@@ -141,7 +138,8 @@ var send_message = function(messageJSON){
 
 module.exports.sendMessage = (event, context, callback) => {
   var messageJSON = fetch_request_message(event);
-  validate_tries_message(messageJSON);
+  var response    = validate_tries_message(messageJSON);
+  callback(null, response);
 };
 
 module.exports.receiver = (event, context, callback) => {
