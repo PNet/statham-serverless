@@ -67,6 +67,8 @@ module.exports.sendMessage = (event, context, callback) => {
 
     var urlDest = url.parse(messageJSON.url);
 
+    messageJSON.dest = urlDest.pathname;
+
     var options = {
       hostname: urlDest.host,
       port: urlDest.port,
