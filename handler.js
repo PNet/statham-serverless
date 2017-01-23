@@ -5,27 +5,36 @@ var AWS = require('aws-sdk');
 var sleep = require('sleep');
 var EventEmitter = require("events").EventEmitter;
 var responseMsg = new EventEmitter();
+var sns = new AWS.SNS();
+var messageJSON; 
+var Key_Id          = 'AKIAJJXJTSB3RUPHDTIQ'
+var secretAccessKey = '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'
 
-module.exports.sendMessage = (event, context, callback) => {
-  var messageJSON;
+function AWS(){
+  AWS.config.update({accessKeyId: Key_Id, secretAccessKey: secretAccessKey});
+}
 
+function format_message_sns(event){
+  var message;
   if(event.Records){
-      messageJSON = JSON.parse(event.Records[0].Sns.Message);
+      message = JSON.parse(event.Records[0].Sns.Message);
   }
   else{
-      messageJSON = JSON.parse(event.body);
-      messageJSON.source = event.headers.Origin;
+      message = JSON.parse(event.body);
+      message.source = event.headers.Origin;
   }
+  return message;
+}
 
+module.exports.sendMessage = (event, context, callback) => {
+  var messageJSON = format_message_sns(event);
+  
   if(!messageJSON.tries)
     messageJSON.tries = 0;
 
   messageJSON.tries += 1;
 
   if(messageJSON.tries > 5){
-    AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
-
-    var sns = new AWS.SNS();
 
     var message = `Attempted to send the message five times but the destination couldn't be reached.\n
     Details:\n
@@ -108,9 +117,6 @@ module.exports.sendMessage = (event, context, callback) => {
 
       messageJSON.error = error;
 
-      AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
-
-      var sns = new AWS.SNS();
       var snsParams = {
         Message: JSON.stringify(messageJSON),
         Subject: "Message not delivered From Lambda",
@@ -153,7 +159,6 @@ module.exports.receiver = (event, context, callback) => {
 };
 
 module.exports.test = (event, context, callback) => {
-  AWS.config.update({accessKeyId: 'AKIAJJXJTSB3RUPHDTIQ', secretAccessKey: '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'});
 
   var sqs = new AWS.SQS("us-west-2");
 
