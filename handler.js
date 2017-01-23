@@ -14,6 +14,7 @@ module.exports.sendMessage = (event, context, callback) => {
   }
   else{
       messageJSON = JSON.parse(event.body);
+      messageJSON.source = event.header.Origin;
   }
 
   if(!messageJSON.tries)
