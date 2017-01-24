@@ -94,14 +94,14 @@ var serialize_options = function(messageJSON){
 
 var make_http_request = function(options, data, callback){
   var req = https.request(options, (res) => {
-    var data = "";
+    var dataResponse = "";
     res.setEncoding('utf8');
     res.on('data', (chunk) => {
-      data += chunk;
+      dataResponse += chunk;
     });
     res.on('end', () => {
       var response = make_json_response(200,{
-        "Success" : JSON.parse(data)
+        "Success" : JSON.parse(dataResponse)
       });
       callback(response);
     });
@@ -126,7 +126,7 @@ var make_http_request = function(options, data, callback){
       callback(response);
     });
   });
-  req.write(postData);
+  req.write(data);
   req.end();
 }
 
@@ -141,12 +141,10 @@ var serialize_sns = function(message, subject, topic){
 
 var get_response = function(errSNS, dataSNS){
   var responseSNS = "";
-  if(errSNS){
+  if(errSNS)
     responseSNS = 'Send SNS error: ' + errSNS;
-  }
-  else{
+  else
     responseSNS = 'Data: ' + dataSNS;
-  }
   return responseSNS;
 }
 
