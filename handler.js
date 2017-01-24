@@ -40,15 +40,20 @@ var validate_tries_message = function(messageJSON, callback){
 }
 
 var mail_message_generator = function(messageJSON){
-  var message = 
-  `Attempted to send the message five times but the destination couldn't be reached.
-  Details:
-  Method: ${messageJSON.method}
-  URL destination: ${messageJSON.url}
-  Source: ${messageJSON.source}
-  Destination path: ${messageJSON.dest}
-  Body: ${JSON.stringify(messageJSON.body, null, 2)}
-  Error: ${messageJSON.error}`;
+  var message = `
+Statham try to transporting five times the message but the destination couldn't be reached.
+Details:
+  
+    Method: ${messageJSON.method}
+    URL destination: ${messageJSON.url}
+    Source: ${messageJSON.source}
+    Destination path: ${messageJSON.dest}
+
+    Body: 
+      ${JSON.stringify(messageJSON.body, null, 2)}
+
+    Error: ${messageJSON.error}
+    `;
   return message;
 }
 
