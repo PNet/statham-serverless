@@ -47,7 +47,7 @@ var mail_message_generator = function(messageJSON){
   URL destination: ${messageJSON.url}
   Source: ${messageJSON.source}
   Destination path: ${messageJSON.dest}
-  Body: ${JSON.stringify(messageJSON.body)}
+  Body: ${JSON.stringify(messageJSON.body, null, 2)}
   ${messageJSON.error}`;
   return message;
 }
