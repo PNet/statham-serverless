@@ -54,26 +54,34 @@ var mail_message_generator = function(messageJSON){
 
 var error_message_to_email = function(messageJSON, callback){
   var message = mail_message_generator(messageJSON);
-  var snsParams = serialize_sns(
-    message,
-    "A message reached the maximum number of sending attempts",
-    'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
+  publish_message_sns(
+    serialize_sns(
+      message,
+      "A message reached the maximum number of sending attempts",
+      'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
+      ),
+      function(responseSNS){
+        var response = make_json_response(200,{
+          "SNS" : responseSNS
+        });
+        callback(response);
+      }
   );
-
-  sns.publish(snsParams, function(errSNS, dataSNS){
-    var responseSNS = get_response(errSNS, dataSNS);
-    var response = make_json_response(400,{
-      "SNSResponse" : responseSNS
-    });
-    callback(response);
-  });
 }
-
-// Code SNS
 
 var get_string_body = function(messageJSON){
   return JSON.stringify(messageJSON.body);
 }
+
+var make_json_response = function(statusCode,body){
+  var response = {
+    statusCode: statusCode,
+    body: JSON.stringify(body)
+  };
+  return response;
+}
+
+// Code SNS
 
 var serialize_options = function(messageJSON){
   var postData = get_string_body(messageJSON);    
@@ -90,6 +98,13 @@ var serialize_options = function(messageJSON){
     }
   };
   return options;
+}
+
+var publish_message_sns = function(params, callback){
+  sns.publish(params, function(errSNS, dataSNS){
+    var responseSNS = get_response(errSNS, dataSNS);
+    callback(responseSNS);
+  });
 }
 
 var make_http_request = function(options, data, callback){
@@ -135,13 +150,7 @@ var get_response = function(errSNS, dataSNS){
   return responseSNS;
 }
 
-var make_json_response = function(statusCode,body){
-  var response = {
-    statusCode: statusCode,
-    body: JSON.stringify(body)
-  };
-  return response;
-}
+// SEND MESSAGE
 
 var send_message = function(messageJSON, callback){
   if(messageJSON.tries > 1) sleep(1000);
@@ -151,16 +160,15 @@ var send_message = function(messageJSON, callback){
     var body = JSON.parse(response.body);
     if(body.error){
       messageJSON.error = body.error;
-      var snsParams = serialize_sns(
-        JSON.stringify(messageJSON), 
-        "Message not delivered From Lambda", 
-        'arn:aws:sns:us-west-2:451967854914:Statham-notification');
-
-      sns.publish(snsParams, function(errSNS, dataSNS){
-       var responseSNS = get_response(errSNS, dataSNS);
-        body.SNS = responseSNS;
-        response.body = JSON.stringify(body);
-        callback(response);
+      publish_message_sns(
+        serialize_sns(
+          JSON.stringify(messageJSON), 
+          "Message not delivered From Lambda", 
+          'arn:aws:sns:us-west-2:451967854914:Statham-notification'),
+        function(responseSNS){
+          body.SNS = responseSNS;
+          response.body = JSON.stringify(body);
+          callback(response);
       });
     }
     else 
