@@ -19,9 +19,3 @@ functions:
       - http:
           path: receiver
           method: post
-  test:
-    handler: handler.test
-    events:
-      - http:
-          path: test
-          method: get

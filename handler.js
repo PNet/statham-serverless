@@ -1,14 +1,14 @@
 'use strict';
-var https = require('https');
-var url = require('url');
-var AWS = require('aws-sdk');
-var sleep = require('sleep');
-var EventEmitter = require("events").EventEmitter;
-var responseMsg = new EventEmitter();
-var sns = new AWS.SNS();
-var Key_Id          = 'AKIAJJXJTSB3RUPHDTIQ';
-var secretAccessKey = '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';
+var https             = require('https');
+var url               = require('url');
+var AWS               = require('aws-sdk');
+var sleep             = require('sleep');
+var EventEmitter      = require("events").EventEmitter;
+var responseMsg       = new EventEmitter();
+var Key_Id            = 'AKIAJJXJTSB3RUPHDTIQ';
+var secretAccessKey   = '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';
 AWS.config.update({accessKeyId: Key_Id, secretAccessKey: secretAccessKey});
+var sns               = new AWS.SNS();
 
 var fetch_request_message = function(event){
   var messageJSON;
@@ -22,18 +22,22 @@ var fetch_request_message = function(event){
   return messageJSON;
 }
 
-var validate_tries_message = function(messageJSON){
+var validate_tries_message = function(messageJSON, callback){
   if(!messageJSON.tries)
     messageJSON.tries = 0;
   messageJSON.tries += 1;
   
   if(messageJSON.tries > 5)
-    return error_message_to_email(messageJSON);
+    error_message_to_email(messageJSON, function(response){
+      callback(response);
+    });
   else
-    return send_message(messageJSON);
+    send_message(messageJSON, function(response){
+      callback(response);
+    });
 }
 
-var error_message_to_email = function(messageJSON){
+var error_message_to_email = function(messageJSON, callback){
    var message = `Attempted to send the message five times but the destination couldn't be reached.\n
     Details:\n
                    Method: ${messageJSON.method}\n
@@ -46,31 +50,31 @@ var error_message_to_email = function(messageJSON){
                    ${messageJSON.error}\n
                    `;
 
-    var snsParams = {
-      Message: message,
-      Subject: "A message reached the maximum number of sending attempts",
-      TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
-    };
-    sns.publish(snsParams, function(errSNS, dataSNS){
-      var responseSNS = "";
-      if(errSNS){
-        responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
-      }
-      else{
-        responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
-      }
+  var snsParams = {
+    Message: message,
+    Subject: "A message reached the maximum number of sending attempts",
+    TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
+  };
+  sns.publish(snsParams, function(errSNS, dataSNS){
+    var responseSNS = "";
+    if(errSNS){
+      responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
+    }
+    else{
+      responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
+    }
 
-      var response = {
-        statusCode: 400,
-        body: JSON.stringify({
-            "SNSResponse" : responseSNS
-        })
-      };
-      return response;
-    });
+    var response = {
+      statusCode: 400,
+      body: JSON.stringify({
+          "SNSResponse" : responseSNS
+      })
+    };
+    callback(response);
+  });
 }
 
-var send_message = function(messageJSON){
+var send_message = function(messageJSON, callback){
   if(messageJSON.tries > 1) sleep(10000);
   var postData = JSON.stringify(messageJSON.body);
   var urlDest = url.parse(messageJSON.url);
@@ -100,20 +104,19 @@ var send_message = function(messageJSON){
           "Success" : dataJSON
           })
       };
-      return response;
+      callback(response);
     });
   });
 
   req.on('error', (e) => {
     var error = `ERROR: ${e.message}`;
-
     messageJSON.error = error;
-
     var snsParams = {
       Message: JSON.stringify(messageJSON),
       Subject: "Message not delivered From Lambda",
       TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-notification'
     };
+    
     sns.publish(snsParams, function(errSNS, dataSNS){
       var responseSNS = "";
       if(errSNS){
@@ -129,7 +132,7 @@ var send_message = function(messageJSON){
             "SNSResponse" : responseSNS
         })
       };
-      return response;
+      callback(response);
     });
   });
   req.write(postData);
@@ -138,6 +141,18 @@ var send_message = function(messageJSON){
 
 module.exports.sendMessage = (event, context, callback) => {
   var messageJSON = fetch_request_message(event);
-  var response    = validate_tries_message(messageJSON);
+  validate_tries_message(messageJSON, function(response){
+    callback(null, response);  
+  });  
+};
+
+module.exports.receiver = (event, context, callback) => {
+  const response = {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: "nice",
+      input: event
+    })
+  };
   callback(null, response);
 };
