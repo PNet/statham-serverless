@@ -48,7 +48,7 @@ var mail_message_generator = function(messageJSON){
   Source: ${messageJSON.source}
   Destination path: ${messageJSON.dest}
   Body: ${JSON.stringify(messageJSON.body, null, 2)}
-  ${messageJSON.error}`;
+  Error: ${messageJSON.error}`;
   return message;
 }
 
@@ -148,9 +148,9 @@ var send_message = function(messageJSON, callback){
   var postData = get_string_body(messageJSON);
   var options = serialize_options(messageJSON);
   make_http_request(options,postData,function(response){
-    if(response.body.error){
-      messageJSON.error = response.body.error;
-
+    var body = JSON.parse(response.body);
+    if(body.error){
+      messageJSON.error = body.error;
       var snsParams = serialize_sns(
         JSON.stringify(messageJSON), 
         "Message not delivered From Lambda", 
@@ -158,8 +158,8 @@ var send_message = function(messageJSON, callback){
 
       sns.publish(snsParams, function(errSNS, dataSNS){
        var responseSNS = get_response(errSNS, dataSNS);
-
-        response.body.responseSNS = responseSNS;
+        body.SNS = responseSNS;
+        response.body = JSON.stringify(body);
         callback(response);
       });
     }
