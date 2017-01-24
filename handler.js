@@ -1,23 +1,25 @@
-'use strict';
-var https             = require('https');
-var url               = require('url');
-var AWS               = require('aws-sdk');
-var sleep             = require('sleep');
-var EventEmitter      = require("events").EventEmitter;
-var responseMsg       = new EventEmitter();
-var Key_Id            = 'AKIAJJXJTSB3RUPHDTIQ';
-var secretAccessKey   = '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';
-AWS.config.update({accessKeyId: Key_Id, secretAccessKey: secretAccessKey});
-var sns               = new AWS.SNS();
+  'use strict';
+  var https             = require('https');
+  var url               = require('url');
+  var AWS               = require('aws-sdk');
+  var sleep             = require('sleep');
+  var EventEmitter      = require("events").EventEmitter;
+  var responseMsg       = new EventEmitter();
+  var Key_Id            = 'AKIAJJXJTSB3RUPHDTIQ';
+  var secretAccessKey   = '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';
+  AWS.config.update({accessKeyId: Key_Id, secretAccessKey: secretAccessKey});
+  var sns               = new AWS.SNS();
+
+// Code Message
 
 var fetch_request_message = function(event){
   var messageJSON;
   if(event.Records){
-      messageJSON = JSON.parse(event.Records[0].Sns.Message);
+    messageJSON = JSON.parse(event.Records[0].Sns.Message);
   }
   else{
-      messageJSON = JSON.parse(event.body);
-      messageJSON.source = event.headers.Origin;
+    messageJSON = JSON.parse(event.body);
+    messageJSON.source = event.headers.Origin;
   }
   return messageJSON;
 }
@@ -26,7 +28,7 @@ var validate_tries_message = function(messageJSON, callback){
   if(!messageJSON.tries)
     messageJSON.tries = 0;
   messageJSON.tries += 1;
-  
+
   if(messageJSON.tries > 5)
     error_message_to_email(messageJSON, function(response){
       callback(response);
@@ -38,45 +40,45 @@ var validate_tries_message = function(messageJSON, callback){
 }
 
 var error_message_to_email = function(messageJSON, callback){
-   var message = `Attempted to send the message five times but the destination couldn't be reached.\n
-    Details:\n
-                   Method: ${messageJSON.method}\n
-                   URL destination: ${messageJSON.url}\n
-                   Source: ${messageJSON.source}\n
-                   Destination path: ${messageJSON.dest}\n
+ var message = `Attempted to send the message five times but the destination couldn't be reached.\n
+ Details:\n
+ Method: ${messageJSON.method}\n
+ URL destination: ${messageJSON.url}\n
+ Source: ${messageJSON.source}\n
+ Destination path: ${messageJSON.dest}\n
 
-                   Body: ${JSON.stringify(messageJSON.body)}\n
+ Body: ${JSON.stringify(messageJSON.body)}\n
 
-                   ${messageJSON.error}\n
-                   `;
+ ${messageJSON.error}\n
+ `;
 
-  var snsParams = {
-    Message: message,
-    Subject: "A message reached the maximum number of sending attempts",
-    TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
+ var snsParams = serialize_sns(
+  message,
+  "A message reached the maximum number of sending attempts",
+  'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
+  );
+
+ sns.publish(snsParams, function(errSNS, dataSNS){
+  var responseSNS = get_response(errSNS, dataSNS);
+
+  var response = {
+    statusCode: 400,
+    body: JSON.stringify({
+      "SNSResponse" : responseSNS
+    })
   };
-  sns.publish(snsParams, function(errSNS, dataSNS){
-    var responseSNS = "";
-    if(errSNS){
-      responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
-    }
-    else{
-      responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
-    }
-
-    var response = {
-      statusCode: 400,
-      body: JSON.stringify({
-          "SNSResponse" : responseSNS
-      })
-    };
-    callback(response);
-  });
+  callback(response);
+});
 }
 
-var send_message = function(messageJSON, callback){
-  if(messageJSON.tries > 1) sleep(10000);
+// Code SNS
+
+var post_data = function(messageJSON){
   var postData = JSON.stringify(messageJSON.body);
+}
+
+var serialize_options = function(messageJSON){
+  postData = post_data(messageJSON);    
   var urlDest = url.parse(messageJSON.url);
   messageJSON.dest = urlDest.pathname;
   var options = {
@@ -89,6 +91,31 @@ var send_message = function(messageJSON, callback){
       'Content-Length': postData.length
     }
   };
+}
+
+var serialize_sns = function(messageJSON, message, topic){
+  var snsParams = {
+    Message: JSON.stringify(messageJSON),
+    Subject: message,
+    TopicArn: topic
+  };
+}
+
+var get_response = function(errSNS, dataSNS){
+  var responseSNS = "";
+  if(errSNS){
+    responseSNS = 'Send SNS error: ' + errSNS;
+  }
+  else{
+    responseSNS = 'Data: ' + dataSNS;
+  }
+  return responseSNS;
+}
+
+var send_message = function(messageJSON, callback){
+  if(messageJSON.tries > 1) sleep(10000);
+  postData = post_data(messageJSON);
+  options = serialize_options(messageJSON);
 
   var req = https.request(options, (res) => {
     var data = "";
@@ -102,7 +129,7 @@ var send_message = function(messageJSON, callback){
         statusCode: 200,
         body: JSON.stringify({
           "Success" : dataJSON
-          })
+        })
       };
       callback(response);
     });
@@ -111,25 +138,20 @@ var send_message = function(messageJSON, callback){
   req.on('error', (e) => {
     var error = `ERROR: ${e.message}`;
     messageJSON.error = error;
-    var snsParams = {
-      Message: JSON.stringify(messageJSON),
-      Subject: "Message not delivered From Lambda",
-      TopicArn: 'arn:aws:sns:us-west-2:451967854914:Statham-notification'
-    };
-    
+
+    var snsParams = serialize_sns(
+      messageJSON, 
+      "Message not delivered From Lambda", 
+      'arn:aws:sns:us-west-2:451967854914:Statham-notification');
+
     sns.publish(snsParams, function(errSNS, dataSNS){
-      var responseSNS = "";
-      if(errSNS){
-        responseSNS = responseSNS + 'SENDSNSERROR: ' + errSNS + ' ';
-      }
-      else{
-        responseSNS = responseSNS + 'DATA: ' + dataSNS + ' ';
-      }
+      var responseSNS = get_response(errSNS, dataSNS);
+
       var response = {
         statusCode: 400,
         body: JSON.stringify({
-            "Error" : error,
-            "SNSResponse" : responseSNS
+          "Error" : error,
+          "SNSResponse" : responseSNS
         })
       };
       callback(response);
