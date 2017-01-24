@@ -40,35 +40,31 @@ var validate_tries_message = function(messageJSON, callback){
 }
 
 var error_message_to_email = function(messageJSON, callback){
- var message = `Attempted to send the message five times but the destination couldn't be reached.\n
- Details:\n
- Method: ${messageJSON.method}\n
- URL destination: ${messageJSON.url}\n
- Source: ${messageJSON.source}\n
- Destination path: ${messageJSON.dest}\n
+  var message = `Attempted to send the message five times but the destination couldn't be reached.\n
+  Details:\n
+  Method: ${messageJSON.method}\n
+  URL destination: ${messageJSON.url}\n
+  Source: ${messageJSON.source}\n
+  Destination path: ${messageJSON.dest}\n
 
- Body: ${JSON.stringify(messageJSON.body)}\n
+  Body: ${JSON.stringify(messageJSON.body)}\n
 
- ${messageJSON.error}\n
- `;
+  ${messageJSON.error}\n
+  `;
 
- var snsParams = serialize_sns(
-  message,
-  "A message reached the maximum number of sending attempts",
-  'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
+  var snsParams = serialize_sns(
+    message,
+    "A message reached the maximum number of sending attempts",
+    'arn:aws:sns:us-west-2:451967854914:Statham-mailer'
   );
 
- sns.publish(snsParams, function(errSNS, dataSNS){
-  var responseSNS = get_response(errSNS, dataSNS);
-
-  var response = {
-    statusCode: 400,
-    body: JSON.stringify({
+  sns.publish(snsParams, function(errSNS, dataSNS){
+    var responseSNS = get_response(errSNS, dataSNS);
+    var response = make_json_response(400,{
       "SNSResponse" : responseSNS
-    })
-  };
-  callback(response);
-});
+    });
+    callback(response);
+  });
 }
 
 // Code SNS
@@ -114,6 +110,14 @@ var get_response = function(errSNS, dataSNS){
   return responseSNS;
 }
 
+var make_json_response = function(statusCode,body){
+  var response = {
+    statusCode: statusCode,
+    body: JSON.stringify(body)
+  };
+  return response;
+}
+
 var send_message = function(messageJSON, callback){
   if(messageJSON.tries > 1) sleep(10000);
   var postData = post_data(messageJSON);
@@ -126,13 +130,9 @@ var send_message = function(messageJSON, callback){
       data += chunk;
     });
     res.on('end', () => {
-      var dataJSON = JSON.parse(data);
-      var response = {
-        statusCode: 200,
-        body: JSON.stringify({
-          "Success" : dataJSON
-        })
-      };
+      var response = make_json_response(200,{
+        "Success" : JSON.parse(data);
+      });
       callback(response);
     });
   });
@@ -149,13 +149,10 @@ var send_message = function(messageJSON, callback){
     sns.publish(snsParams, function(errSNS, dataSNS){
       var responseSNS = get_response(errSNS, dataSNS);
 
-      var response = {
-        statusCode: 400,
-        body: JSON.stringify({
-          "Error" : error,
-          "SNSResponse" : responseSNS
-        })
-      };
+      var response = make_json_response(400,{
+        "Error" : error,
+        "SNSResponse" : responseSNS
+      });
       callback(response);
     });
   });
