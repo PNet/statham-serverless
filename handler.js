@@ -74,11 +74,11 @@ var error_message_to_email = function(messageJSON, callback){
 // Code SNS
 
 var post_data = function(messageJSON){
-  var postData = JSON.stringify(messageJSON.body);
+  return JSON.stringify(messageJSON.body);
 }
 
 var serialize_options = function(messageJSON){
-  postData = post_data(messageJSON);    
+  var postData = post_data(messageJSON);    
   var urlDest = url.parse(messageJSON.url);
   messageJSON.dest = urlDest.pathname;
   var options = {
@@ -91,14 +91,16 @@ var serialize_options = function(messageJSON){
       'Content-Length': postData.length
     }
   };
+  return options;
 }
 
-var serialize_sns = function(messageJSON, message, topic){
+var serialize_sns = function(message, subject, topic){
   var snsParams = {
-    Message: JSON.stringify(messageJSON),
-    Subject: message,
+    Message: message,
+    Subject: subject,
     TopicArn: topic
   };
+  return snsParams;
 }
 
 var get_response = function(errSNS, dataSNS){
@@ -114,8 +116,8 @@ var get_response = function(errSNS, dataSNS){
 
 var send_message = function(messageJSON, callback){
   if(messageJSON.tries > 1) sleep(10000);
-  postData = post_data(messageJSON);
-  options = serialize_options(messageJSON);
+  var postData = post_data(messageJSON);
+  var options = serialize_options(messageJSON);
 
   var req = https.request(options, (res) => {
     var data = "";
@@ -140,7 +142,7 @@ var send_message = function(messageJSON, callback){
     messageJSON.error = error;
 
     var snsParams = serialize_sns(
-      messageJSON, 
+      JSON.stringify(messageJSON), 
       "Message not delivered From Lambda", 
       'arn:aws:sns:us-west-2:451967854914:Statham-notification');
 
