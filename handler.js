@@ -101,30 +101,17 @@ var make_http_request = function(options, data, callback){
     });
     res.on('end', () => {
       var response = make_json_response(200,{
-        "Success" : JSON.parse(dataResponse)
+        "success" : JSON.parse(dataResponse)
       });
       callback(response);
     });
   });
 
   req.on('error', (e) => {
-    var error = `ERROR: ${e.message}`;
-    messageJSON.error = error;
-
-    var snsParams = serialize_sns(
-      JSON.stringify(messageJSON), 
-      "Message not delivered From Lambda", 
-      'arn:aws:sns:us-west-2:451967854914:Statham-notification');
-
-    sns.publish(snsParams, function(errSNS, dataSNS){
-      var responseSNS = get_response(errSNS, dataSNS);
-
-      var response = make_json_response(400,{
-        "Error" : error,
-        "SNSResponse" : responseSNS
-      });
-      callback(response);
-    });
+    var response = make_json_response(400,{
+      "error" : e.message
+    })
+    callback(response);
   });
   req.write(data);
   req.end();
@@ -161,7 +148,23 @@ var send_message = function(messageJSON, callback){
   var postData = get_string_body(messageJSON);
   var options = serialize_options(messageJSON);
   make_http_request(options,postData,function(response){
-    callback(response);
+    if(response.body.error){
+      messageJSON.error = response.body.error;
+
+      var snsParams = serialize_sns(
+        JSON.stringify(messageJSON), 
+        "Message not delivered From Lambda", 
+        'arn:aws:sns:us-west-2:451967854914:Statham-notification');
+
+      sns.publish(snsParams, function(errSNS, dataSNS){
+       var responseSNS = get_response(errSNS, dataSNS);
+
+        response.body.responseSNS = responseSNS;
+        callback(response);
+      });
+    }
+    else 
+      callback(response);
   });
 }
 
