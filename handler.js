@@ -39,19 +39,21 @@ var validate_tries_message = function(messageJSON, callback){
     });
 }
 
+var mail_message_generator = function(messageJSON){
+  var message = 
+  `Attempted to send the message five times but the destination couldn't be reached.
+  Details:
+  Method: ${messageJSON.method}
+  URL destination: ${messageJSON.url}
+  Source: ${messageJSON.source}
+  Destination path: ${messageJSON.dest}
+  Body: ${JSON.stringify(messageJSON.body)}
+  ${messageJSON.error}`;
+  return message;
+}
+
 var error_message_to_email = function(messageJSON, callback){
-  var message = `Attempted to send the message five times but the destination couldn't be reached.\n
-  Details:\n
-  Method: ${messageJSON.method}\n
-  URL destination: ${messageJSON.url}\n
-  Source: ${messageJSON.source}\n
-  Destination path: ${messageJSON.dest}\n
-
-  Body: ${JSON.stringify(messageJSON.body)}\n
-
-  ${messageJSON.error}\n
-  `;
-
+  var message = mail_message_generator(messageJSON);
   var snsParams = serialize_sns(
     message,
     "A message reached the maximum number of sending attempts",
@@ -131,7 +133,7 @@ var send_message = function(messageJSON, callback){
     });
     res.on('end', () => {
       var response = make_json_response(200,{
-        "Success" : JSON.parse(data);
+        "Success" : JSON.parse(data)
       });
       callback(response);
     });
