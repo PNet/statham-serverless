@@ -71,12 +71,12 @@ var error_message_to_email = function(messageJSON, callback){
 
 // Code SNS
 
-var post_data = function(messageJSON){
+var get_string_body = function(messageJSON){
   return JSON.stringify(messageJSON.body);
 }
 
 var serialize_options = function(messageJSON){
-  var postData = post_data(messageJSON);    
+  var postData = get_string_body(messageJSON);    
   var urlDest = url.parse(messageJSON.url);
   messageJSON.dest = urlDest.pathname;
   var options = {
@@ -92,39 +92,7 @@ var serialize_options = function(messageJSON){
   return options;
 }
 
-var serialize_sns = function(message, subject, topic){
-  var snsParams = {
-    Message: message,
-    Subject: subject,
-    TopicArn: topic
-  };
-  return snsParams;
-}
-
-var get_response = function(errSNS, dataSNS){
-  var responseSNS = "";
-  if(errSNS){
-    responseSNS = 'Send SNS error: ' + errSNS;
-  }
-  else{
-    responseSNS = 'Data: ' + dataSNS;
-  }
-  return responseSNS;
-}
-
-var make_json_response = function(statusCode,body){
-  var response = {
-    statusCode: statusCode,
-    body: JSON.stringify(body)
-  };
-  return response;
-}
-
-var send_message = function(messageJSON, callback){
-  if(messageJSON.tries > 1) sleep(10000);
-  var postData = post_data(messageJSON);
-  var options = serialize_options(messageJSON);
-
+var make_http_request = function(options, data, callback){
   var req = https.request(options, (res) => {
     var data = "";
     res.setEncoding('utf8');
@@ -160,6 +128,43 @@ var send_message = function(messageJSON, callback){
   });
   req.write(postData);
   req.end();
+}
+
+var serialize_sns = function(message, subject, topic){
+  var snsParams = {
+    Message: message,
+    Subject: subject,
+    TopicArn: topic
+  };
+  return snsParams;
+}
+
+var get_response = function(errSNS, dataSNS){
+  var responseSNS = "";
+  if(errSNS){
+    responseSNS = 'Send SNS error: ' + errSNS;
+  }
+  else{
+    responseSNS = 'Data: ' + dataSNS;
+  }
+  return responseSNS;
+}
+
+var make_json_response = function(statusCode,body){
+  var response = {
+    statusCode: statusCode,
+    body: JSON.stringify(body)
+  };
+  return response;
+}
+
+var send_message = function(messageJSON, callback){
+  if(messageJSON.tries > 1) sleep(1000);
+  var postData = get_string_body(messageJSON);
+  var options = serialize_options(messageJSON);
+  make_http_request(options,postData,function(response){
+    callback(response);
+  });
 }
 
 module.exports.sendMessage = (event, context, callback) => {
