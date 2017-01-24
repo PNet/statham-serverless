@@ -3,12 +3,9 @@
   var url               = require('url');
   var AWS               = require('aws-sdk');
   var sleep             = require('sleep');
-  var EventEmitter      = require("events").EventEmitter;
-  var responseMsg       = new EventEmitter();
   var Key_Id            = 'AKIAJJXJTSB3RUPHDTIQ';
   var secretAccessKey   = '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';
   AWS.config.update({accessKeyId: Key_Id, secretAccessKey: secretAccessKey});
-  var sns               = new AWS.SNS();
 
 // Code Message
 
@@ -41,7 +38,7 @@ var validate_tries_message = function(messageJSON, callback){
 
 var mail_message_generator = function(messageJSON){
   var message = `
-Statham try to transporting five times the message but the destination couldn't be reached.
+Statham tried to transporting five times the message but the destination couldn't be reached.
 Details:
   
     Method: ${messageJSON.method}
@@ -49,11 +46,11 @@ Details:
     Source: ${messageJSON.source}
     Destination path: ${messageJSON.dest}
 
-    Body: 
-      ${JSON.stringify(messageJSON.body, null, 2)}
+Body:  
+${JSON.stringify(messageJSON.body, null, 2)}
 
-    Error: ${messageJSON.error}
-    `;
+Error: ${messageJSON.error}
+`;
   return message;
 }
 
@@ -106,6 +103,7 @@ var serialize_options = function(messageJSON){
 }
 
 var publish_message_sns = function(params, callback){
+  var sns = new AWS.SNS();
   sns.publish(params, function(errSNS, dataSNS){
     var responseSNS = get_response(errSNS, dataSNS);
     callback(responseSNS);
@@ -126,7 +124,6 @@ var make_http_request = function(options, data, callback){
       callback(response);
     });
   });
-
   req.on('error', (e) => {
     var response = make_json_response(400,{
       "error" : e.message
